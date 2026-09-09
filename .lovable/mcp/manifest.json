@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://jbywbuyeqiqlcaqdfizb.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "ai-trainer-assist",
+      "version": "0.1.0",
+      "title": "AI Trainer Assist"
+    },
+    "tools": [
+      {
+        "name": "list_clients",
+        "title": "List clients",
+        "description": "List the signed-in trainer's clients, newest activity first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "search": {
+              "description": "Optional name filter.",
+              "type": "string"
+            },
+            "include_archived": {
+              "description": "Include archived clients.",
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_client",
+        "title": "Get client profile",
+        "description": "Fetch one client's full intake profile: demographics, fitness profile, body assessment, readiness/health answers and training setup.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "client_id": {
+              "type": "string",
+              "description": "Client id."
+            }
+          },
+          "required": [
+            "client_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_plans",
+        "title": "List workout plans",
+        "description": "List the trainer's workout plans, optionally filtered to one client.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "client_id": {
+              "description": "Filter to a single client id.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_plan",
+        "title": "Get workout plan",
+        "description": "Fetch one workout plan including its full structured programme content.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "description": "Workout plan id."
+            }
+          },
+          "required": [
+            "plan_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "approve_plan",
+        "title": "Approve workout plan",
+        "description": "Mark a draft workout plan as trainer-approved. Only a certified trainer reviewing the plan should do this.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "description": "Workout plan id."
+            },
+            "trainer_notes": {
+              "description": "Optional review notes to store with the plan.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "plan_id"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
