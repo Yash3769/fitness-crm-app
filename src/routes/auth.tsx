@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Dumbbell, Loader2, UserRound, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, homeForRole, setPreviewRole, type AppRole } from "@/hooks/useSession";
-import { MOCK_ONLY } from "@/lib/preview-mode";
+import { MOCK_ONLY, NO_SERVER } from "@/lib/preview-mode";
 import { bootstrapAdminAccount, signUpClient } from "@/lib/auth.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,17 +83,23 @@ function AuthPage() {
     navigate({ to: homeForRole(role), replace: true });
   }
 
-  // Local dev only: the instant-confirm signup path needs a service-role key that only exists
-  // inside Lovable Cloud's actual hosting. Without it, fall back to a normal Supabase signup —
-  // still a real account and real data, just with one extra step (click the emailed link once).
+  // Falls back to a plain client-side Supabase signup when the instant-confirm server path
+  // isn't available (missing service-role key locally, or no server at all on GitHub Pages).
+  // Still a real account and real data — if the project has email confirmation turned on, that
+  // means one extra step (click the emailed link once); if it's off, signUp returns an active
+  // session immediately and the effect above redirects as soon as role/loading settle.
   async function devSignUpFallback(targetEmail: string, role: AppRole, fullName: string) {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: targetEmail,
       password,
       options: { data: { role, full_name: fullName } },
     });
     if (error && !/already registered|already exists/i.test(error.message)) {
       toast.error(error.message);
+      return;
+    }
+    if (data.session) {
+      toast.success("Account created.");
       return;
     }
     toast.success("Account created — check your email (and spam) for a confirmation link, then log in.", {
@@ -115,6 +121,12 @@ function AuthPage() {
     try {
       let { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) {
+        // Static export (GitHub Pages): there's no server at all to call, so skip straight to
+        // a plain client-side signup instead of trying (and failing) a server function first.
+        if (NO_SERVER) {
+          await devSignUpFallback(email.trim(), "admin", "Coach");
+          return;
+        }
         // First-ever login: silently provision the fixed coach account, then retry once.
         const boot = await bootstrap();
         if (!boot.ok) {
@@ -162,6 +174,10 @@ function AuthPage() {
     }
     setBusy(true);
     try {
+      if (NO_SERVER) {
+        await devSignUpFallback(email.trim(), "client", name.trim());
+        return;
+      }
       const result = await signUp({ data: { name: name.trim(), email: email.trim(), password } });
       if (!result.ok) {
         if (isMissingServiceKey(result.message)) {

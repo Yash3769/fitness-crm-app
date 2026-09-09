@@ -9,7 +9,7 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 // Only set by scripts/build-pages.mjs, for the static GitHub Pages export. Leaves the normal
 // dev server and the regular server-rendered build (Cloudflare, etc.) completely untouched.
-const isPagesBuild = process.env.BUILD_TARGET === "pages";
+const isPagesBuild = process.env["BUILD_TARGET"] === "pages";
 const PAGES_BASE = "/fitness-crm-app/";
 
 export default defineConfig({
@@ -34,11 +34,14 @@ export default defineConfig({
   vite: {
     plugins: [mcpPlugin()],
     define: {
-      // GitHub Pages has no server at all, so there's no real Supabase backend behind that
-      // build — the whole app runs on the local preview-db.ts mock instead (see MOCK_ONLY in
-      // preview-mode.ts). Always defined as a literal boolean so every other build target
-      // dead-code-eliminates the mock-only branches instead of hitting a runtime reference.
-      __MOCK_ONLY__: JSON.stringify(isPagesBuild),
+      // MOCK_ONLY (preview-db.ts local mock) stays available for dev's "Preview mode" buttons,
+      // but is never forced on for the Pages build anymore — that build now talks to the real
+      // Supabase project directly (see NO_SERVER below for what's still different about it).
+      __MOCK_ONLY__: "false",
+      // GitHub Pages has no server at all, so anything that needs one (the coach-account
+      // bootstrap / signup server functions) can't be called — the client falls back straight
+      // to a plain client-side Supabase signup instead (see NO_SERVER in preview-mode.ts).
+      __NO_SERVER__: JSON.stringify(isPagesBuild),
     },
     ...(isPagesBuild ? { base: PAGES_BASE } : {}),
   },

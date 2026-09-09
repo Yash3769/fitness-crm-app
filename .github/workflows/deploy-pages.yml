@@ -24,6 +24,11 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm run build:pages
+        env:
+          # Publishable/anon keys — meant to be public, safe to bake into a static client build.
+          VITE_SUPABASE_URL: https://nqnydvrrjhibdthctoyq.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ZMFmwvIfFfTU6jEnq7Wk0g_7XkONktL
+          VITE_SUPABASE_PROJECT_ID: nqnydvrrjhibdthctoyq
       - uses: actions/upload-pages-artifact@v3
         with:
           path: prodbuild
