@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Dumbbell, Loader2, UserRound, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, homeForRole, setPreviewRole, type AppRole } from "@/hooks/useSession";
+import { MOCK_ONLY } from "@/lib/preview-mode";
 import { bootstrapAdminAccount, signUpClient } from "@/lib/auth.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ function AuthPage() {
   const bootstrap = useServerFn(bootstrapAdminAccount);
   const signUp = useServerFn(signUpClient);
 
-  const [mode, setMode] = useState<Mode>(search.role ?? "choose");
+  const [mode, setMode] = useState<Mode>(MOCK_ONLY ? "choose" : (search.role ?? "choose"));
   const [clientTab, setClientTab] = useState<"login" | "signup">(search.role === "client" ? "signup" : "login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -67,6 +68,12 @@ function AuthPage() {
   }
 
   function chooseMode(next: Mode) {
+    // Mock-only build (GitHub Pages): there's no server to log in against at all, so both
+    // top-level buttons jump straight into the local mock experience instead of a real form.
+    if (MOCK_ONLY && next !== "choose") {
+      preview(next === "admin" ? "admin" : "client");
+      return;
+    }
     reset();
     setMode(next);
   }
@@ -217,7 +224,13 @@ function AuthPage() {
               </button>
             </div>
 
-            {import.meta.env.DEV && (
+            {MOCK_ONLY && (
+              <p className="text-xs text-muted-foreground">
+                This is a demo build — no account needed. Your data stays in this browser only.
+              </p>
+            )}
+
+            {import.meta.env.DEV && !MOCK_ONLY && (
               <div className="rounded-2xl border border-dashed border-border p-4">
                 <p className="text-xs font-semibold text-muted-foreground">
                   Local testing only — skips real login, no account needed

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { getPreviewRole, setPreviewRole, clearPreviewRole, PREVIEW_USER_ID, type AppRole } from "@/lib/preview-mode";
+import { getPreviewRole, setPreviewRole, clearPreviewRole, MOCK_ONLY, PREVIEW_USER_ID, type AppRole } from "@/lib/preview-mode";
 
 export type { AppRole };
 export { getPreviewRole, setPreviewRole, clearPreviewRole };
@@ -25,7 +25,10 @@ export function useSession() {
   const [previewRole, setPreviewRoleState] = useState<AppRole | null>(() => getPreviewRole());
 
   useEffect(() => {
-    if (previewRole) {
+    // Mock-only builds (GitHub Pages) have no real backend at all — never touch real Supabase
+    // auth, even before a role is picked, or the client throws on the missing env vars it'd
+    // need to talk to a server that doesn't exist for this deployment.
+    if (previewRole || MOCK_ONLY) {
       setLoading(false);
       return;
     }
@@ -42,7 +45,7 @@ export function useSession() {
 
   // Preview role can be switched from the auth screen in the same tab; re-read on focus.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    if (!import.meta.env.DEV && !MOCK_ONLY) return;
     const sync = () => setPreviewRoleState(getPreviewRole());
     window.addEventListener("storage", sync);
     window.addEventListener("focus", sync);
@@ -56,7 +59,7 @@ export function useSession() {
 
   const roleQuery = useQuery({
     queryKey: ["role", user?.id],
-    enabled: !!user && !previewRole,
+    enabled: !!user && !previewRole && !MOCK_ONLY,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<AppRole | null> => {
       const { data, error } = await supabase

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, clearPreviewRole } from "@/hooks/useSession";
+import { MOCK_ONLY } from "@/lib/preview-mode";
 import { useMyClient } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { initials } from "@/lib/domain";
@@ -33,7 +34,7 @@ function ClientProfilePage() {
     await qc.cancelQueries();
     qc.clear();
     clearPreviewRole();
-    await supabase.auth.signOut();
+    if (!MOCK_ONLY) await supabase.auth.signOut();
     navigate({ to: "/auth", search: { next: undefined, role: undefined }, replace: true });
   }
 

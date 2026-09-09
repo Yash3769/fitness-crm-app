@@ -64,9 +64,9 @@ let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
 // import { supabase } from "@/integrations/supabase/client";
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>, {
   get(_, prop, receiver) {
-    // Dev-only "Preview mode": route table reads/writes to a local mock instead of the real
-    // backend, so the whole app can be clicked through (and saved to) without a real account.
-    if (import.meta.env.DEV && prop === 'from' && getPreviewRole()) {
+    // Preview mode (dev) / mock-only builds (GitHub Pages): route table reads/writes to a local
+    // mock instead of the real backend — getPreviewRole() itself decides when that applies.
+    if (prop === 'from' && getPreviewRole()) {
       return previewFrom;
     }
     if (!_supabase) _supabase = createSupabaseClient();

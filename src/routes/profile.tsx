@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { Disclaimer } from "@/components/HealthAlert";
 import { Button } from "@/components/ui/button";
 import { useSession, clearPreviewRole } from "@/hooks/useSession";
+import { MOCK_ONLY } from "@/lib/preview-mode";
 import { useTrainerProfile } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { initials } from "@/lib/domain";
@@ -34,7 +35,7 @@ function ProfilePage() {
     await qc.cancelQueries();
     qc.clear();
     clearPreviewRole();
-    await supabase.auth.signOut();
+    if (!MOCK_ONLY) await supabase.auth.signOut();
     navigate({ to: "/auth", search: { next: undefined, role: undefined }, replace: true });
   }
 

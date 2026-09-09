@@ -33,6 +33,13 @@ export default defineConfig({
   ...(isPagesBuild ? { nitro: false } : {}),
   vite: {
     plugins: [mcpPlugin()],
+    define: {
+      // GitHub Pages has no server at all, so there's no real Supabase backend behind that
+      // build — the whole app runs on the local preview-db.ts mock instead (see MOCK_ONLY in
+      // preview-mode.ts). Always defined as a literal boolean so every other build target
+      // dead-code-eliminates the mock-only branches instead of hitting a runtime reference.
+      __MOCK_ONLY__: JSON.stringify(isPagesBuild),
+    },
     ...(isPagesBuild ? { base: PAGES_BASE } : {}),
   },
 });
